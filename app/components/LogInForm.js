@@ -1,58 +1,43 @@
-import { useState } from 'react';
+"use client"; 
 
-export default function LogInForm({ onSubmit }) {
-  const [formData, setFormData] = useState({ username: '', password: '' });
+import { useState } from "react";
+import { useRouter } from "next/navigation"; 
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
+const LogInForm = ({ onSubmit }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const router = useRouter(); // Now useRouter will work because this component is client-side
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
-    setFormData({ username: '', password: '' }); // Reset form after submit
+  const handleLogin = async () => {
+    try {
+      // login request
+      const formData = { email, password };
+      onSubmit(formData); // Pass the data back to the parent component
+      
+      // After successful login, navigate to the main page
+      router.push("/main"); // Redirect to the main page after login
+    } catch (error) {
+      console.error("Error during login:", error);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label htmlFor="username" className="block text-lg font-medium">Username</label>
-        <input
-          type="text"
-          id="username"
-          name="username"
-          value={formData.username}
-          onChange={handleChange}
-          required
-          className="mt-2 p-3 w-full rounded-md border border-gray-300"
-          placeholder="Enter your username"
-        />
-      </div>
-      <div>
-        <label htmlFor="password" className="block text-lg font-medium">Password</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          className="mt-2 p-3 w-full rounded-md border border-gray-300"
-          placeholder="Enter your password"
-        />
-      </div>
-      <div>
-        <button
-          type="submit"
-          className="px-6 py-3 bg-blue-500 text-white rounded-full w-full hover:bg-blue-600 transition"
-        >
-          Log In
-        </button>
-      </div>
-    </form>
+    <div className="login-form">
+      <input 
+        type="email" 
+        value={email} 
+        onChange={(e) => setEmail(e.target.value)} 
+        placeholder="Email" 
+      />
+      <input 
+        type="password" 
+        value={password} 
+        onChange={(e) => setPassword(e.target.value)} 
+        placeholder="Password" 
+      />
+      <button onClick={handleLogin}>Log In</button>
+    </div>
   );
-}
+};
+
+export default LogInForm;

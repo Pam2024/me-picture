@@ -1,58 +1,63 @@
-import { useState } from 'react';
 
-export default function SignUpForm({ onSubmit }) {
-  const [formData, setFormData] = useState({ username: '', password: '' });
+import { useState } from "react";
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
+export default function SignUpForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(formData);
-    setFormData({ username: '', password: '' }); // Reset form after submit
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (res.status === 200) {
+        setMessage("User registered successfully!");
+        setError("");
+      } else {
+        setError(data.error);
+        setMessage("");
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+      setMessage("");
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label htmlFor="username" className="block text-lg font-medium">Username</label>
+        <label htmlFor="email">Email</label>
         <input
-          type="text"
-          id="username"
-          name="username"
-          value={formData.username}
-          onChange={handleChange}
+          type="email"
+          id="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
-          className="mt-2 p-3 w-full rounded-md border border-gray-300"
-          placeholder="Enter your username"
         />
       </div>
       <div>
-        <label htmlFor="password" className="block text-lg font-medium">Password</label>
+        <label htmlFor="password">Password</label>
         <input
           type="password"
           id="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
-          className="mt-2 p-3 w-full rounded-md border border-gray-300"
-          placeholder="Enter your password"
         />
       </div>
-      <div>
-        <button
-          type="submit"
-          className="px-6 py-3 bg-green-500 text-white rounded-full w-full hover:bg-green-600 transition"
-        >
-          Sign Up
-        </button>
-      </div>
+      {error && <p className="text-red-500">{error}</p>}
+      {message && <p className="text-green-500">{message}</p>}
+      <button type="submit">Sign Up</button>
     </form>
   );
 }

@@ -1,4 +1,4 @@
-// app/shared/Header.js
+
 export default function Header() {
     return (
       <header className="py-10 text-center bg-gradient-to-r from-indigo-600 to-purple-700 text-white">

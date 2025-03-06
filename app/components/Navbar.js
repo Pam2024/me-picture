@@ -1,11 +1,10 @@
-"use client";  
+"use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";  
+import Link from "next/link"; // Import Link for page navigation
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
-  const router = useRouter();
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user"));
@@ -16,7 +15,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
-    router.push("/login");
+    window.location.href = "/login"; // Redirect to login page after logout
   };
 
   return (
@@ -39,23 +38,17 @@ const Navbar = () => {
         {user ? (
           <>
             <span style={styles.userName}>{user.name}</span>
-            <div
-              style={styles.profileIcon}
-              onClick={() => router.push("/profile")}
-            >
-              👤
-            </div>
+            <Link href="/profile">
+              <div style={styles.profileIcon}>👤</div>
+            </Link>
             <button onClick={handleLogout} style={styles.logoutButton}>
               Logout
             </button>
           </>
         ) : (
-          <div
-            style={styles.profileIcon}
-            onClick={() => router.push("/profile")}
-          >
-            👤
-          </div>
+          <Link href="/profile">
+            <div style={styles.profileIcon}>👤</div>
+          </Link>
         )}
       </div>
     </nav>

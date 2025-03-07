@@ -1,20 +1,23 @@
 import bcrypt from 'bcrypt';
 
-
 // Load environment variables
 require('dotenv').config();
 
-const mysql = require('mysql');
+const mysql = require('mysql2');
 
-// Set up MySQL connection using environment variables
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,        
-  user: process.env.DB_USER,        
-  password: process.env.DB_PASSWORD,  
-  database: process.env.DB_NAME     
+// Set up MySQL connection pool using environment variables
+const db = mysql2.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-db.connect((err) => {
+// Test the database connection
+db.getConnection((err) => {
   if (err) {
     console.error('Database connection failed: ', err);
   } else {
@@ -22,8 +25,8 @@ db.connect((err) => {
   }
 });
 
+// Export the database pool
 module.exports = db;
-
 
 export async function POST(request) {
   const { email, password } = await request.json();

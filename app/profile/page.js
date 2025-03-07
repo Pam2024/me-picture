@@ -1,17 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";  
-import Navbar from "../components/Navbar"; 
-import Footer from "../shared/footer"; 
+import Navbar from "../components/Navbar";
+import Footer from "../shared/footer";
+import Image from "next/image";
 
+// Profile page component
 const Profile = () => {
   const [wallets, setWallets] = useState([]);
   const [walletName, setWalletName] = useState("");
-  const [newImageUrl, setNewImageUrl] = useState("");
   const [newImageTitle, setNewImageTitle] = useState("");
+  const [newImageFile, setNewImageFile] = useState(null);
+  const [visibility, setVisibility] = useState("private"); // Visibility default to private
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Load wallets from localStorage when component mounts
   useEffect(() => {
     const savedWallets = JSON.parse(localStorage.getItem("wallets"));
     if (savedWallets) {
@@ -19,7 +22,6 @@ const Profile = () => {
     }
   }, []);
 
-  // Update wallets in localStorage whenever wallets state changes
   useEffect(() => {
     if (wallets.length > 0) {
       localStorage.setItem("wallets", JSON.stringify(wallets));
@@ -36,26 +38,44 @@ const Profile = () => {
     };
 
     setWallets([...wallets, newWallet]);
-    setWalletName(""); // Reset wallet name input
+    setWalletName("");
+  };
+
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setNewImageFile(file);
+    }
   };
 
   const addImageToWallet = (walletId) => {
-    if (newImageUrl.trim() === "") return;
+    if (!newImageFile || newImageTitle.trim() === "") return;
 
-    const updatedWallets = wallets.map((wallet) => {
-      if (wallet.id === walletId) {
-        wallet.images.push({
-          id: new Date().toISOString(),
-          url: newImageUrl,
-          title: newImageTitle,
-        });
-      }
-      return wallet;
-    });
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64Image = reader.result;
 
-    setWallets(updatedWallets);
-    setNewImageUrl(""); // Reset image URL input
-    setNewImageTitle(""); // Reset image title input
+      const updatedWallets = wallets.map((wallet) => {
+        if (wallet.id === walletId) {
+          wallet.images.push({
+            id: new Date().toISOString(),
+            url: base64Image,
+            title: newImageTitle,
+            visibility: visibility, // Include visibility here
+          });
+        }
+        return wallet;
+      });
+
+      setWallets(updatedWallets);
+
+      // Reset inputs
+      setNewImageFile(null);
+      setNewImageTitle("");
+      setVisibility("private"); // Reset visibility after image upload
+    };
+
+    reader.readAsDataURL(newImageFile);
   };
 
   const deleteImage = (walletId, imageId) => {
@@ -85,6 +105,11 @@ const Profile = () => {
     setWallets(updatedWallets);
   };
 
+  const deleteWallet = (walletId) => {
+    const updatedWallets = wallets.filter((wallet) => wallet.id !== walletId);
+    setWallets(updatedWallets);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-r from-indigo-600 to-purple-700">
       <Navbar />
@@ -103,7 +128,7 @@ const Profile = () => {
               type="text"
               value={walletName}
               onChange={(e) => setWalletName(e.target.value)}
-              placeholder="Enter wallet topic"
+              placeholder="Enter wallet name"
               className="p-2 border border-gray-300 rounded text-black w-full"
             />
             <button
@@ -115,7 +140,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Wallets and CRUD Operations */}
+        {/* Display Wallets */}
         {wallets.length === 0 ? (
           <p>No wallets available. Create one above!</p>
         ) : (
@@ -123,9 +148,21 @@ const Profile = () => {
             <div key={wallet.id} className="mb-8 w-full max-w-4xl">
               <h3 className="text-xl font-semibold mb-4">{wallet.name}</h3>
 
+              {/* Delete Wallet */}
+              <button
+                onClick={() => deleteWallet(wallet.id)}
+                className="mb-4 p-2 bg-red-500 text-white rounded"
+              >
+                Delete Wallet
+              </button>
+
               {/* Add Image to Wallet */}
               <div className="flex space-x-2 mb-4">
-            
+                <input
+                  type="file"
+                  onChange={handleImageChange}
+                  className="p-2 border border-gray-300 rounded text-black w-full"
+                />
                 <input
                   type="text"
                   value={newImageTitle}
@@ -133,6 +170,14 @@ const Profile = () => {
                   placeholder="Image Title"
                   className="p-2 border border-gray-300 rounded text-black w-full"
                 />
+                <select
+                  value={visibility}
+                  onChange={(e) => setVisibility(e.target.value)}
+                  className="p-2 border border-gray-300 rounded text-black w-full"
+                >
+                  <option value="private">Private</option>
+                  <option value="public">Public</option>
+                </select>
                 <button
                   onClick={() => addImageToWallet(wallet.id)}
                   className="p-2 bg-green-500 text-white rounded"
@@ -148,9 +193,11 @@ const Profile = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {wallet.images.map((image) => (
                     <div key={image.id} className="border p-4 rounded bg-white text-black">
-                      <img
+                      <Image
                         src={image.url}
                         alt={image.title}
+                        width={300}
+                        height={160}
                         className="w-full h-40 object-cover rounded mb-2"
                       />
                       <input
@@ -166,7 +213,7 @@ const Profile = () => {
                           onClick={() => deleteImage(wallet.id, image.id)}
                           className="p-2 bg-red-500 text-white rounded"
                         >
-                          Delete
+                          Delete Image
                         </button>
                       </div>
                     </div>

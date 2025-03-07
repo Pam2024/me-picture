@@ -1,27 +1,28 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import Navbar from '../components/Navbar'; 
-import Footer from '../shared/footer';
-import Slider from 'react-slick';
+import { useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
+import Footer from "../shared/footer";
+import Slider from "react-slick";
+import Image from "next/image"; // Import Image component from next/image
 
 // Import Slick Carousel styles
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
+// MainPage component
 export default function MainPage() {
   const [userImages, setUserImages] = useState([]);
 
   useEffect(() => {
-    // Simulate fetching user-uploaded images
-    const fetchedImages = [
-      "/images/user1.jpg",
-      "/images/user2.jpg",
-      "/images/user3.jpg",
-      "/images/user4.jpg",
-      "/images/user5.jpg",
-    ];
-    setUserImages(fetchedImages);
+    // Fetch public images from the backend API
+    const fetchImages = async () => {
+      const response = await fetch("/api/get-public-images");
+      const data = await response.json();
+      setUserImages(data);
+    };
+
+    fetchImages();
   }, []);
 
   const settings = {
@@ -44,18 +45,45 @@ export default function MainPage() {
           <h2 className="text-3xl font-semibold mb-4">Explore the world as seen by everyone's eyes.</h2>
         </div>
 
+        {/* Carousel Section */}
         <div className="w-full max-w-4xl">
           <Slider {...settings}>
-            {userImages.map((image, index) => (
-              <div key={index} className="px-4">
-                <img
-                  src={image}
-                  alt={`User Image ${index + 1}`}
-                  className="rounded-lg shadow-lg"
-                  style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
-                />
-              </div>
-            ))}
+            {/* 5 Sample Images */}
+            {userImages.length === 0 ? (
+              // If no images are fetched, fallback to sample images
+              [
+                "/images/user1.jpg",
+                "/images/user2.jpg",
+                "/images/user3.jpg",
+                "/images/user4.jpg",
+                "/images/user5.jpg"
+              ].map((image, index) => (
+                <div key={index} className="px-4">
+                  <Image
+                    src={image}
+                    alt={`User Image ${index + 1}`}
+                    width={500} // Set a fixed width
+                    height={300} // Set a fixed height
+                    className="rounded-lg shadow-lg"
+                  />
+                </div>
+              ))
+            ) : (
+              // Display fetched user images
+              userImages.map((image, index) => (
+                <div key={index} className="px-4">
+                  <Image
+                    src={image.url}
+                    alt={image.title}
+                    width={500} // Set a fixed width
+                    height={300} // Set a fixed height
+                    className="rounded-lg shadow-lg"
+                  />
+                  <h3 className="text-center text-lg font-semibold mt-2">{image.title}</h3>
+                  <p className="text-center text-sm">{image.username}</p>
+                </div>
+              ))
+            )}
           </Slider>
         </div>
       </main>
